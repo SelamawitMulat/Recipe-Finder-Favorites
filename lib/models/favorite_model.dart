@@ -1,37 +1,23 @@
-import 'recipe_model.dart';
-
 class FavoriteModel {
-  final String id;
-  final RecipeModel recipe;
-  final DateTime addedAt;
+  final String recipeId;
+  final bool valueState;
 
   FavoriteModel({
-    required this.id,
-    required this.recipe,
-    required this.addedAt,
+    required this.recipeId,
+    required this.valueState,
   });
-
-  factory FavoriteModel.fromRecipe(RecipeModel recipe) {
-    return FavoriteModel(
-      id: recipe.id,
-      recipe: recipe,
-      addedAt: DateTime.now(),
-    );
-  }
 
   factory FavoriteModel.fromJson(Map<String, dynamic> json) {
     return FavoriteModel(
-      id: json['id'] as String,
-      recipe: RecipeModel.fromJson(json['recipe'] as Map<String, dynamic>),
-      addedAt: DateTime.parse(json['addedAt'] as String),
+      recipeId: json['recipeId']?.toString() ?? '',
+      valueState: json['valueState'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'recipe': recipe.toJson(),
-      'addedAt': addedAt.toIso8601String(),
+      'recipeId': recipeId,
+      'valueState': valueState,
     };
   }
 }

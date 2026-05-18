@@ -4,60 +4,50 @@ import '../core/constants/api_constants.dart';
 import '../models/recipe_model.dart';
 
 class ApiService {
-  final http.Client client;
+  // Generates the base collection URL dynamically from your constants
+  String get _url => '${ApiConstants.baseUrl}${ApiConstants.recipesEndpoint}';
 
-  ApiService({http.Client? client}) : client = client ?? http.Client();
-
-  Future<List<RecipeModel>> searchRecipes(String query) async {
+  /// Fetches the entire feed of recipes from MockAPI
+  Future<List<RecipeModel>> getAllRecipes() async {
     try {
-      final response =
-          await client.get(Uri.parse('${ApiConstants.searchEndpoint}$query'));
+      final response = await http.get(Uri.parse(_url)).timeout(
+            const Duration(seconds: ApiConstants.connectionTimeoutSeconds),
+          );
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['meals'] == null) return [];
-        return (data['meals'] as List)
-            .map((meal) => RecipeModel.fromJson(meal))
+        List jsonResponse = json.decode(response.body);
+        return jsonResponse
+            .map((recipe) => RecipeModel.fromJson(recipe))
             .toList();
       } else {
-        throw Exception('Failed to load recipes');
+        throw Exception('Server returned error code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Network error occurred: $e');
+      throw Exception('Failed to load server data stream connection: $e');
     }
   }
 
-  Future<List<RecipeModel>> getRecipesByCategory(String category) async {
+  /// Sends a PUT request to update a single, specific recipe by its unique ID
+  Future<RecipeModel> updateRecipe(
+      String id, Map<String, dynamic> updates) async {
     try {
-      final response = await client
-          .get(Uri.parse('${ApiConstants.filterEndpoint}$category'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['meals'] == null) return [];
-        return (data['meals'] as List)
-            .map((meal) => RecipeModel.fromJson(meal))
-            .toList();
-      } else {
-        throw Exception('Failed to load recipes by category');
-      }
-    } catch (e) {
-      throw Exception('Network error occurred: $e');
-    }
-  }
+      // Targets the exact structural record URL (e.g., .../recipes/1)
+      final individualUrl = '$_url/$id';
 
-  Future<RecipeModel?> getRecipeDetails(String id) async {
-    try {
-      final response =
-          await client.get(Uri.parse('${ApiConstants.lookupEndpoint}$id'));
+      final response = await http.put(
+        Uri.parse(individualUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(updates),
+      );
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['meals'] == null || (data['meals'] as List).isEmpty)
-          return null;
-        return RecipeModel.fromJson(data['meals'][0]);
+        return RecipeModel.fromJson(json.decode(response.body));
       } else {
-        throw Exception('Failed to fetch item details');
+        throw Exception(
+            'Server rejected the update payload status: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Network error occurred: $e');
+      throw Exception('Network update protocol connection failure: $e');
     }
   }
 }

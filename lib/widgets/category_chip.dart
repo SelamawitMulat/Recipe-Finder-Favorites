@@ -1,43 +1,32 @@
 import 'package:flutter/material.dart';
-import '../core/constants/app_colors.dart';
 
 class CategoryChip extends StatelessWidget {
-  final String label;
+  final String category;
   final bool isSelected;
-  final VoidCallback onTap;
+  final VoidCallback onSelected;
 
   const CategoryChip({
     super.key,
-    required this.label,
+    required this.category,
     required this.isSelected,
-    required this.onTap,
+    required this.onSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryCoral
-              : AppColors.cardBackgroundDark,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color:
-                isSelected ? Colors.transparent : Colors.grey.withOpacity(0.2),
-            width: 1,
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ChoiceChip(
+        label: Text(category),
+        selected: isSelected,
+        onSelected: (_) => onSelected(),
+        selectedColor: Colors.orange,
+        backgroundColor: Colors.grey[900],
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.black : Colors.white,
+          fontWeight: FontWeight.bold,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class CustomErrorWidget extends StatelessWidget {
-  final String errorMessage;
+  final String message;
   final VoidCallback onRetry;
 
   const CustomErrorWidget({
     super.key,
-    required this.errorMessage,
+    required this.message,
     required this.onRetry,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Center(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 60, color: AppColors.primaryCoral),
+            const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
             const SizedBox(height: 16),
             Text(
-              errorMessage,
+              message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
+              style: const TextStyle(fontSize: 16, color: Colors.white70),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryCoral),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               onPressed: onRetry,
-              child: const Text('Retry', style: TextStyle(color: Colors.white)),
-            )
+              child: const Text('Retry', style: TextStyle(color: Colors.black)),
+            ),
           ],
         ),
       ),

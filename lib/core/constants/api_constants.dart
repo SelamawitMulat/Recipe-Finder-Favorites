@@ -1,6 +1,7 @@
 class ApiConstants {
-  static const String baseUrl = 'https://www.themealdb.com/api/json/v1/1';
-  static const String searchEndpoint = '$baseUrl/search.php?s=';
-  static const String lookupEndpoint = '$baseUrl/lookup.php?i=';
-  static const String filterEndpoint = '$baseUrl/filter.php?c=';
+  static const String baseUrl = 'https://6a09bc2ee7e3f433d4836201.mockapi.io';
+
+  static const String recipesEndpoint = '/recipes';
+
+  static const int connectionTimeoutSeconds = 10;
 }

@@ -9,23 +9,24 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final favsProvider = Provider.of<FavoriteProvider>(context);
-    final favList = favsProvider.favorites;
+    final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final favoriteRecipes = favoriteProvider.favorites;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Favorites')),
-      body: favList.isEmpty
+      appBar: AppBar(
+        title: const Text('Favorite Recipes',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: favoriteRecipes.isEmpty
           ? const EmptyStateWidget(
-              title: "No Favorites Yet",
-              message:
-                  "Start adding recipes to your favorites by tapping the heart icon",
+              message: 'No favorites added yet!',
               icon: Icons.favorite_border,
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: favList.length,
+              padding: const EdgeInsets.all(16.0),
+              itemCount: favoriteRecipes.length,
               itemBuilder: (context, index) {
-                return RecipeCard(recipe: favList[index].recipe);
+                return RecipeCard(recipe: favoriteRecipes[index]);
               },
             ),
     );

@@ -1,31 +1,23 @@
 class NoteModel {
-  final String mealId;
-  final String content;
-  final int rating;
-  final String lastUpdated;
+  final String recipeId;
+  final String textContent;
 
   NoteModel({
-    required this.mealId,
-    required this.content,
-    required this.rating,
-    required this.lastUpdated,
+    required this.recipeId,
+    required this.textContent,
   });
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
-      mealId: json['mealId'] ?? '',
-      content: json['content'] ?? '',
-      rating: json['rating'] ?? 0,
-      lastUpdated: json['lastUpdated'] ?? '',
+      recipeId: json['recipeId']?.toString() ?? '',
+      textContent: json['textContent'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'mealId': mealId,
-      'content': content,
-      'rating': rating,
-      'lastUpdated': lastUpdated,
+      'recipeId': recipeId,
+      'textContent': textContent,
     };
   }
 }

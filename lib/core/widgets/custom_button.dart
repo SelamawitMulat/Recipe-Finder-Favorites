@@ -1,47 +1,43 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class CustomButton extends StatelessWidget {
-  final String text;
+  final String label;
   final VoidCallback onPressed;
-  final Color? backgroundColor;
   final IconData? icon;
+  final Color backgroundColor;
 
   const CustomButton({
     super.key,
-    required this.text,
+    required this.label,
     required this.onPressed,
-    this.backgroundColor,
     this.icon,
+    this.backgroundColor = Colors.orange,
   });
 
   @override
   Widget build(BuildContext context) {
-    final finalBgColor = backgroundColor ?? AppColors.primaryCoral;
+    final labelWidget = Text(label,
+        style:
+            const TextStyle(color: Colors.black, fontWeight: FontWeight.bold));
 
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: finalBgColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2,
-      ),
-      onPressed: onPressed,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 20, color: Colors.white),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            text,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+    return SizedBox(
+      width: double.infinity,
+      child: icon != null
+          ? ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: backgroundColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12)),
+              icon: Icon(icon, color: Colors.black),
+              label: labelWidget,
+              onPressed: onPressed,
+            )
+          : ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: backgroundColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12)),
+              onPressed: onPressed,
+              child: labelWidget,
+            ),
     );
   }
 }

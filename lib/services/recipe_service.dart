@@ -1,24 +1,22 @@
 import '../models/recipe_model.dart';
 import 'api_service.dart';
 
-/// Wraps API operations specifically for UI domain components matching clean decoupling.
 class RecipeService {
   final ApiService _apiService = ApiService();
 
-  Future<List<RecipeModel>> getTrendingItems() async {
-    // Defaults search to a fallback profile base to populate feed cleanly
-    return await _apiService.searchRecipes('chicken');
+  Future<List<RecipeModel>> getRecipes() async {
+    try {
+      return await _apiService.getAllRecipes();
+    } catch (e) {
+      throw Exception('Failed to fetch recipes: $e');
+    }
   }
 
-  Future<List<RecipeModel>> searchByName(String name) async {
-    return await _apiService.searchRecipes(name);
-  }
-
-  Future<List<RecipeModel>> searchByCategory(String category) async {
-    return await _apiService.getRecipesByCategory(category);
-  }
-
-  Future<RecipeModel?> getDetails(String id) async {
-    return await _apiService.getRecipeDetails(id);
+  Future<RecipeModel> updateRecipeNotes(String id, String notes) async {
+    try {
+      return await _apiService.updateRecipe(id, {'userNotes': notes});
+    } catch (e) {
+      throw Exception('Failed to update notes: $e');
+    }
   }
 }

@@ -1,223 +1,238 @@
-// ignore_for_file: unused_import
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/recipe_model.dart';
 import '../providers/recipe_provider.dart';
-import '../providers/favorite_provider.dart';
-import '../providers/note_provider.dart';
-import '../core/widgets/loading_widget.dart';
-import '../core/constants/app_colors.dart';
-import '../widgets/rating_widget.dart';
+import 'add_note_screen.dart';
 
-class RecipeDetailScreen extends StatefulWidget {
-  final String recipeId;
-  const RecipeDetailScreen({super.key, required this.recipeId});
+class RecipeDetailScreen extends StatelessWidget {
+  final RecipeModel recipe;
+  const RecipeDetailScreen({super.key, required this.recipe});
 
-  @override
-  State<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
-}
-
-class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
-  RecipeModel? _fullRecipe;
-  bool _loading = true;
-  int _currentRating = 0;
-  final TextEditingController _notesController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRecipeDetails();
-  }
-
-  void _loadRecipeDetails() async {
-    final recProv = Provider.of<RecipeProvider>(context, listen: false);
-    final noteProv = Provider.of<NoteProvider>(context, listen: false);
-
-    final details = await recProv.fetchDetailedRecipe(widget.recipeId);
-    if (details != null) {
-      final savedNote = noteProv.getNoteForMeal(widget.recipeId);
-      setState(() {
-        _fullRecipe = details;
-        _loading = false;
-        if (savedNote != null) {
-          _currentRating = savedNote.rating;
-          _notesController.text = savedNote.content;
-        }
-      });
-    }
+  void _showDeleteConfirmation(
+      BuildContext context, RecipeProvider provider, String recipeId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text(
+            'Delete Note?',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'Are you sure you want to permanently remove this personal note?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.white30)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                bool deleted = await provider.deleteRecipeNotes(recipeId);
+                if (context.mounted && deleted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Note deleted successfully!')),
+                  );
+                }
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Scaffold(body: LoadingWidget());
-    if (_fullRecipe == null)
-      return const Scaffold(
-          body: Center(child: Text("Error fetching details")));
-
-    final recipe = _fullRecipe!;
+    final recipeProvider = Provider.of<RecipeProvider>(context);
+    final currentRecipe = recipeProvider.recipes.firstWhere(
+      (r) => r.id == recipe.id,
+      orElse: () => recipe,
+    );
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: AppColors.realBackgroundDark,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                recipe.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+      appBar: AppBar(
+        title: Text(currentRecipe.title),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              currentRecipe.thumbnailUrl,
+              width: double.infinity,
+              height: 250,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 250,
+                color: Colors.grey[900],
+                child: const Center(
+                    child:
+                        Icon(Icons.restaurant, size: 50, color: Colors.orange)),
               ),
-              background: Image.network(recipe.thumbnailUrl, fit: BoxFit.cover),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
+            Padding(
               padding: const EdgeInsets.all(16.0),
+              key: ValueKey(currentRecipe.userNotes),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryCoral,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.edit_note, color: Colors.white),
-                    label: const Text("Add Note & Rating",
-                        style: TextStyle(color: Colors.white, fontSize: 16)),
-                    onPressed: () => _showAddNoteModal(context, recipe.id),
+                  Text(
+                    currentRecipe.title,
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 24),
-                  const Text("Ingredients",
-                      style: TextStyle(
-                          fontSize: 22,
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      currentRecipe.category,
+                      style: const TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 12),
-                  ...recipe.ingredients.map((ing) => Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(
-                            bottom: 8), // Standard backward-compatible fix here
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardBackgroundDark,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                          fontSize: 12),
+                    ),
+                  ),
+                  const Divider(height: 32),
+                  if (currentRecipe.userNotes.isEmpty) ...[
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.orange),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) =>
+                                  AddNoteScreen(recipe: currentRecipe)),
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Note'),
+                    ),
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF231B10),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.orange.withOpacity(0.3), width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'My Personal Notes:',
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        color: Colors.orange, size: 20),
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) => AddNoteScreen(
+                                                recipe: currentRecipe)),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.redAccent, size: 20),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () => _showDeleteConfirmation(
+                                        context,
+                                        recipeProvider,
+                                        currentRecipe.id),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            currentRecipe.userNotes,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const Divider(height: 32),
+                  const Text(
+                    'Ingredients',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ...currentRecipe.ingredients.map((ingredient) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.lens,
-                                size: 8, color: AppColors.primaryCoral),
-                            const SizedBox(width: 12),
+                            const Icon(Icons.fiber_manual_record,
+                                size: 8, color: Colors.orange),
+                            const SizedBox(width: 8),
                             Expanded(
-                                child: Text(ing,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 15))),
+                              child: Text(
+                                ingredient,
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ),
                           ],
                         ),
                       )),
-                  const SizedBox(height: 24),
-                  const Text("Instructions",
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Text(
-                    recipe.instructions ?? 'No dynamic instructions provided.',
-                    style: const TextStyle(
-                        color: AppColors.textSecondaryDark,
-                        fontSize: 15,
-                        height: 1.5),
+                  const Divider(height: 32),
+                  const Text(
+                    'Instructions',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    currentRecipe.instructions,
+                    style: const TextStyle(fontSize: 15, height: 1.4),
+                  ),
                 ],
               ),
             ),
-          )
-        ],
+          ],
+        ),
       ),
-    );
-  }
-
-  void _showAddNoteModal(BuildContext context, String mealId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.realBackgroundDark,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                  top: 20,
-                  left: 16,
-                  right: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Your Rating",
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 8),
-                  RatingWidget(
-                    rating: _currentRating,
-                    size: 32,
-                    onRatingSelected: (val) =>
-                        setModalState(() => _currentRating = val),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text("Your Notes",
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _notesController,
-                    maxLines: 4,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: "What did you think?",
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      fillColor: AppColors.cardBackgroundDark,
-                      filled: true,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.buttonSaveColor,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    onPressed: () {
-                      Provider.of<NoteProvider>(context, listen: false)
-                          .saveOrUpdateNote(
-                              mealId, _notesController.text, _currentRating);
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Save Note",
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

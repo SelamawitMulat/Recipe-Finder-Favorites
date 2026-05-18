@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/recipe_model.dart';
 import '../providers/favorite_provider.dart';
-import '../routes/app_routes.dart';
-import '../core/constants/app_colors.dart';
-import 'favorite_button.dart';
+import '../screens/recipe_detail_screen.dart';
 
 class RecipeCard extends StatelessWidget {
   final RecipeModel recipe;
@@ -13,21 +11,24 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final favsProvider = Provider.of<FavoriteProvider>(context);
-    final isFav = favsProvider.isFavorite(recipe.id);
+    final favoriteProvider = Provider.of<FavoriteProvider>(context);
+    final isFav = favoriteProvider.isFavorite(recipe);
 
-    return InkWell(
-      onTap: () => Navigator.pushNamed(context, AppRoutes.recipeDetail,
-          arguments: recipe.id),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackgroundDark,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        clipBehavior: Clip.antiAlias,
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RecipeDetailScreen(recipe: recipe),
+            ),
+          );
+        },
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
@@ -36,60 +37,48 @@ class RecipeCard extends StatelessWidget {
                   height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     height: 180,
-                    child: Icon(Icons.broken_image, size: 50),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentOrange,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      recipe.category,
-                      style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
+                    color: Colors.grey[900],
+                    child: const Center(
+                      child: Icon(Icons.broken_image,
+                          color: Colors.white30, size: 40),
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 12,
-                  right: 12,
-                  child: FavoriteButton(
-                    isFavorite: isFav,
-                    onTap: () => favsProvider.toggleFavorite(recipe),
+                  top: 8,
+                  right: 8,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    child: IconButton(
+                      icon: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: isFav ? Colors.red : Colors.white,
+                      ),
+                      onPressed: () => favoriteProvider.toggleFavorite(recipe),
+                    ),
                   ),
                 ),
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     recipe.title,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
-                    "Juicy meal option curated perfectly with savory spices.",
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                    recipe.category,
+                    style: const TextStyle(
+                        color: Colors.orange, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),

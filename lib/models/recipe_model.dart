@@ -2,51 +2,74 @@ class RecipeModel {
   final String id;
   final String title;
   final String category;
+  final String instructions;
   final String thumbnailUrl;
-  final String? instructions;
   final List<String> ingredients;
+  final String userNotes;
 
   RecipeModel({
     required this.id,
     required this.title,
     required this.category,
+    required this.instructions,
     required this.thumbnailUrl,
-    this.instructions,
     required this.ingredients,
+    required this.userNotes,
   });
 
   factory RecipeModel.fromJson(Map<String, dynamic> json) {
     List<String> parsedIngredients = [];
-    for (int i = 1; i <= 20; i++) {
-      final ingredient = json['strIngredient$i'];
-      final measure = json['strMeasure$i'];
-      if (ingredient != null && ingredient.toString().trim().isNotEmpty) {
-        if (measure != null && measure.toString().trim().isNotEmpty) {
-          parsedIngredients.add(
-              "${measure.toString().trim()} ${ingredient.toString().trim()}");
-        } else {
-          parsedIngredients.add(ingredient.toString().trim());
-        }
-      }
+    var ingredientsData = json['ingredients'];
+
+    if (ingredientsData is List) {
+      parsedIngredients =
+          List<String>.from(ingredientsData.map((e) => e.toString()));
+    } else if (ingredientsData is String && ingredientsData.isNotEmpty) {
+      parsedIngredients =
+          ingredientsData.split(',').map((e) => e.trim()).toList();
     }
 
     return RecipeModel(
-      id: json['idMeal'] ?? '',
-      title: json['strMeal'] ?? '',
-      category: json['strCategory'] ?? json['strArea'] ?? 'General',
-      thumbnailUrl: json['strMealThumb'] ?? '',
-      instructions: json['strInstructions'],
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      category: json['category'] ?? '',
+      instructions: json['instructions'] ?? '',
+      thumbnailUrl:
+          json['thumbnailUrl'] ?? json['image'] ?? json['imageUrl'] ?? '',
       ingredients: parsedIngredients,
+      userNotes: json['userNotes'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'idMeal': id,
-      'strMeal': title,
-      'strCategory': category,
-      'strMealThumb': thumbnailUrl,
-      'strInstructions': instructions,
+      'id': id,
+      'title': title,
+      'category': category,
+      'instructions': instructions,
+      'thumbnailUrl': thumbnailUrl,
+      'ingredients': ingredients,
+      'userNotes': userNotes,
     };
+  }
+
+  RecipeModel copyWith({
+    String? id,
+    String? title,
+    String? category,
+    String? instructions,
+    String? thumbnailUrl,
+    List<String>? ingredients,
+    String? userNotes,
+  }) {
+    return RecipeModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      instructions: instructions ?? this.instructions,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      ingredients: ingredients ?? this.ingredients,
+      userNotes: userNotes ?? this.userNotes,
+    );
   }
 }
