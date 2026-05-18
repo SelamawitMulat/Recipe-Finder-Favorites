@@ -1,14 +1,7 @@
-// ignore_for_file: unused_import
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
 import '../widgets/recipe_card.dart';
-import '../widgets/custom_drawer.dart';
-import '../widgets/category_chip.dart';
-import '../widgets/search_bar_widget.dart';
-import '../widgets/skeleton_card.dart';
-import '../core/widgets/error_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,12 +11,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _selectedCategory = 'All';
+  final TextEditingController _searchController = TextEditingController();
+
   final List<String> _categories = [
     'All',
-    'Breakfast',
-    'Lunch',
-    'Dinner',
-    'Dessert'
+    'Beef',
+    'Chicken',
+    'Seafood',
+    'Dessert',
+    'Vegetarian'
   ];
 
   @override
@@ -35,81 +32,174 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final recipeProvider = Provider.of<RecipeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final filteredRecipes = recipeProvider.recipes.where((recipe) {
+      final matchesCategory = _selectedCategory == 'All' || 
+          recipe.category.toLowerCase() == _selectedCategory.toLowerCase();
+          
+      final matchesSearch = recipe.title.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+          recipe.category.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+          recipe.instructions.toLowerCase().contains(_searchController.text.toLowerCase());
+
+      return matchesCategory && matchesSearch;
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipe Finder',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Recipe Finder', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      drawer: const CustomDrawer(),
+      
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(color: Colors.orange),
+              accountName: const Text(
+                'Recipe Finder',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+              ),
+              accountEmail: const Text(
+                'Your Culinary Companion',
+                style: TextStyle(color: Colors.black87),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.grey[900],
+                child: const Icon(Icons.restaurant_menu, color: Colors.orange, size: 36),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home, color: Colors.orange),
+              title: const Text('Home', style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite, color: Colors.red),
+              title: const Text('Favorites', style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/favorites');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.blue),
+              title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline, color: Colors.white70),
+              title: const Text('About', style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/about');
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: SearchBarWidget(
-              onChanged: (query) => recipeProvider.searchRecipes(query),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Search recipes, categories, or ingredients...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+              ),
             ),
           ),
+          
+          // Horizontal Categories Filter Slider Layout Row with adaptive text colors
           SizedBox(
-            height: 50,
+            height: 40,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               itemCount: _categories.length,
               itemBuilder: (context, index) {
                 final category = _categories[index];
-                final isSelected = recipeProvider.selectedCategory == category;
-                return CategoryChip(
-                  category: category,
-                  isSelected: isSelected,
-                  onSelected: () => recipeProvider.filterByCategory(category),
+                final isSelected = _selectedCategory == category;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    selectedColor: Colors.orange,
+                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                    labelStyle: TextStyle(
+                      color: isSelected 
+                          ? Colors.black 
+                          : (isDark ? Colors.white : Colors.black87),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                  ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          
           Expanded(
-            child: _buildRecipeContent(recipeProvider),
+            child: recipeProvider.isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+                : recipeProvider.errorMessage.isNotEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              recipeProvider.errorMessage,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.redAccent),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => recipeProvider.fetchRecipes(),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                              child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                            ),
+                          ],
+                        ),
+                      )
+                    : filteredRecipes.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No recipes found matching selection.',
+                              style: TextStyle(color: Colors.white54, fontSize: 16),
+                            )
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16.0),
+                            itemCount: filteredRecipes.length,
+                            itemBuilder: (context, index) {
+                              return RecipeCard(recipe: filteredRecipes[index]);
+                            },
+                          ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildRecipeContent(RecipeProvider provider) {
-    if (provider.isLoading) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: 5,
-        itemBuilder: (context, index) => const SkeletonCard(),
-      );
-    }
-
-    if (provider.errorMessage.isNotEmpty) {
-      return CustomErrorWidget(
-        message: provider.errorMessage,
-        onRetry: () => provider.fetchRecipes(),
-      );
-    }
-
-    if (provider.recipes.isEmpty) {
-      return const Center(
-        child: Text(
-          'No recipes found.',
-          style: TextStyle(fontSize: 16, color: Colors.white54),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: provider.recipes.length,
-      itemBuilder: (context, index) {
-        return RecipeCard(recipe: provider.recipes[index]);
-      },
     );
   }
 }

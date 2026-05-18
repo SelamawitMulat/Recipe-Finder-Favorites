@@ -14,12 +14,15 @@ class RecipeCard extends StatelessWidget {
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
     final isFav = favoriteProvider.isFavorite(recipe.id);
 
+    // Dynamically pull the theme data context
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
+        onTapCancel: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -39,10 +42,17 @@ class RecipeCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 180,
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: Icon(Icons.broken_image,
-                          color: Colors.white30, size: 40),
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[900]
+                        : Colors.grey[300],
+                    child: Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white30
+                            : Colors.black,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),
@@ -63,14 +73,17 @@ class RecipeCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     recipe.title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textTheme.titleLarge?.color,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -78,7 +91,21 @@ class RecipeCard extends StatelessWidget {
                   Text(
                     recipe.category,
                     style: const TextStyle(
-                        color: Colors.orange, fontWeight: FontWeight.w600),
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    recipe.instructions,
+                    style: TextStyle(
+                      color:
+                          theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      fontSize: 13,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
