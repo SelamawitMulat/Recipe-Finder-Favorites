@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import '../models/recipe_model.dart';
 import '../services/recipe_service.dart';
@@ -19,13 +21,22 @@ class RecipeProvider with ChangeNotifier {
 
   Future<void> fetchRecipes() async {
     _isLoading = true;
-    _errorMessage = '';
+    _errorMessage = ''; // Clear out old error state at the beginning of a retry
     notifyListeners();
     try {
       _allRecipes = await _recipeService.getRecipes();
+      await Future.delayed(
+          const Duration(seconds: 5)); // Keep for your screenshots
       _applyFilters();
+      _errorMessage =
+          ''; // FIXED: Wipes it completely clean (no blank space) on success!
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      print("❌ DATABASE FETCH ERROR DETAILS: $e");
+      _errorMessage =
+          "Failed to load recipes. Please check your internet connection.";
+      _allRecipes = <RecipeModel>[];
+      _filteredRecipes =
+          <RecipeModel>[]; // Ensure filtered lists are empty on error
     } finally {
       _isLoading = false;
       notifyListeners();

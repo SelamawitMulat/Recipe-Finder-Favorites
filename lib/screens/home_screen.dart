@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
 import '../widgets/recipe_card.dart';
+import '../core/widgets/loading_widget.dart';
+import '../core/widgets/error_widget.dart'; // Cleanly imports your CustomErrorWidget file
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -43,21 +45,27 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final filteredRecipes = recipeProvider.recipes.where((recipe) {
-      final matchesCategory = _selectedCategory == 'All' || 
+      final matchesCategory = _selectedCategory == 'All' ||
           recipe.category.toLowerCase() == _selectedCategory.toLowerCase();
-          
-      final matchesSearch = recipe.title.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-          recipe.category.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-          recipe.instructions.toLowerCase().contains(_searchController.text.toLowerCase());
+
+      final matchesSearch = recipe.title
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase()) ||
+          recipe.category
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase()) ||
+          recipe.instructions
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase());
 
       return matchesCategory && matchesSearch;
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipe Finder', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Recipe Finder',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      
       drawer: Drawer(
         child: Column(
           children: [
@@ -65,7 +73,10 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: const BoxDecoration(color: Colors.orange),
               accountName: const Text(
                 'Recipe Finder',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.black),
               ),
               accountEmail: const Text(
                 'Your Culinary Companion',
@@ -73,17 +84,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.grey[900],
-                child: const Icon(Icons.restaurant_menu, color: Colors.orange, size: 36),
+                child: const Icon(Icons.restaurant_menu,
+                    color: Colors.orange, size: 36),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.home, color: Colors.orange),
-              title: const Text('Home', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text('Home',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
               leading: const Icon(Icons.favorite, color: Colors.red),
-              title: const Text('Favorites', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text('Favorites',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/favorites');
@@ -91,7 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.settings, color: Colors.blue),
-              title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text('Settings',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/settings');
@@ -99,7 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.info_outline, color: Colors.white70),
-              title: const Text('About', style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text('About',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/about');
@@ -109,7 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
       body: Column(
         children: [
           Padding(
@@ -120,13 +135,12 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: InputDecoration(
                 hintText: 'Search recipes, categories, or ingredients...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
               ),
             ),
           ),
-          
-          // Horizontal Categories Filter Slider Layout Row with adaptive text colors
           SizedBox(
             height: 40,
             child: ListView.builder(
@@ -142,10 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: Text(category),
                     selected: isSelected,
                     selectedColor: Colors.orange,
-                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                    backgroundColor:
+                        isDark ? Colors.grey[800] : Colors.grey[200],
                     labelStyle: TextStyle(
-                      color: isSelected 
-                          ? Colors.black 
+                      color: isSelected
+                          ? Colors.black
                           : (isDark ? Colors.white : Colors.black87),
                       fontWeight: FontWeight.bold,
                     ),
@@ -160,43 +175,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
           Expanded(
-            child: recipeProvider.isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.orange))
-                : recipeProvider.errorMessage.isNotEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              recipeProvider.errorMessage,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.redAccent),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => recipeProvider.fetchRecipes(),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                              child: const Text('Retry', style: TextStyle(color: Colors.black)),
-                            ),
-                          ],
-                        ),
-                      )
-                    : filteredRecipes.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No recipes found matching selection.',
-                              style: TextStyle(color: Colors.white54, fontSize: 16),
-                            )
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16.0),
-                            itemCount: filteredRecipes.length,
-                            itemBuilder: (context, index) {
-                              return RecipeCard(recipe: filteredRecipes[index]);
-                            },
-                          ),
+            child: () {
+              // 1. Loading State
+              if (recipeProvider.isLoading) {
+                return const LoadingWidget();
+              }
+
+              // 2. Error State: Evaluates cleanly if any active internet connection issue is present
+              if (recipeProvider.errorMessage.isNotEmpty) {
+                return CustomErrorWidget(
+                  message: recipeProvider.errorMessage,
+                  onRetry: () => recipeProvider.fetchRecipes(),
+                );
+              }
+
+              // 3. Empty Fallback State
+              if (filteredRecipes.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No recipes found matching selection.',
+                    style: TextStyle(color: Colors.white54, fontSize: 16),
+                  ),
+                );
+              }
+
+              // 4. Success State
+              return ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: filteredRecipes.length,
+                itemBuilder: (context, index) {
+                  return RecipeCard(recipe: filteredRecipes[index]);
+                },
+              );
+            }(),
           ),
         ],
       ),

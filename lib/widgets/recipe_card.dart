@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/recipe_model.dart';
@@ -13,8 +15,6 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
     final isFav = favoriteProvider.isFavorite(recipe.id);
-
-    // Dynamically pull the theme data context
     final theme = Theme.of(context);
 
     return Card(
@@ -22,7 +22,7 @@ class RecipeCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTapCancel: () {
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
