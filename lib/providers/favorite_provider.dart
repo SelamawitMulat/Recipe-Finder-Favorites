@@ -6,8 +6,8 @@ class FavoriteProvider with ChangeNotifier {
 
   List<RecipeModel> get favorites => _favoriteRecipes;
 
-  bool isFavorite(RecipeModel recipe) {
-    return _favoriteRecipes.any((r) => r.id == recipe.id);
+  bool isFavorite(String recipeId) {
+    return _favoriteRecipes.any((r) => r.id == recipeId);
   }
 
   void toggleFavorite(RecipeModel recipe) {

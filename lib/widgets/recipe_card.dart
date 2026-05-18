@@ -12,7 +12,7 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
-    final isFav = favoriteProvider.isFavorite(recipe);
+    final isFav = favoriteProvider.isFavorite(recipe.id);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),

@@ -29,13 +29,19 @@ class RecipeModel {
           ingredientsData.split(',').map((e) => e.trim()).toList();
     }
 
+    // Capture unique identification based on mealName
+    String detectedId = json['id']?.toString() ??
+        json['_id']?.toString() ??
+        json['mealName']?.toString() ??
+        json.hashCode.toString();
+
     return RecipeModel(
-      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
-      title: json['title'] ?? '',
+      id: detectedId,
+      title: json['mealName'] ?? json['title'] ?? '',
       category: json['category'] ?? '',
       instructions: json['instructions'] ?? '',
       thumbnailUrl:
-          json['thumbnailUrl'] ?? json['image'] ?? json['imageUrl'] ?? '',
+          json['image'] ?? json['thumbnailUrl'] ?? json['imageUrl'] ?? '',
       ingredients: parsedIngredients,
       userNotes: json['userNotes'] ?? '',
     );
@@ -44,10 +50,10 @@ class RecipeModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
+      'mealName': title,
       'category': category,
       'instructions': instructions,
-      'thumbnailUrl': thumbnailUrl,
+      'image': thumbnailUrl,
       'ingredients': ingredients,
       'userNotes': userNotes,
     };
